@@ -1,3 +1,41 @@
+// Add this near the top of your script.js
+const API_KEY = ''; // We'll handle this securely later
+
+async function callClaudeAPI(userMessage) {
+    try {
+        // This will be replaced with real API call
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: 'claude-3-sonnet-20240229',
+                max_tokens: 1024,
+                messages: [{
+                    role: 'user',
+                    content: userMessage
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
+
+        const data = await response.json();
+        return data.content[0].text;
+    } catch (error) {
+        console.error('Error:', error);
+        return 'Sorry, there was an error processing your request.';
+    }
+}
+
+
+
+
 // Get elements from the page
 const chatMessages = document.querySelector('.chat-messages');
 const textArea = document.querySelector('textarea');
@@ -15,13 +53,19 @@ function addMessage(text, isUser = true) {
 }
 
 // Handle send button click
-sendButton.addEventListener('click', () => {
+sendButton.addEventListener('click', async () => {
     const message = textArea.value.trim();
     if (message) {
         addMessage(message);
         textArea.value = '';
-        // Here we'll later add the API call
-        addMessage('Thanks for your message! API integration coming soon...', false);
+        
+        setLoading(true);
+        
+        // Call the API and get response
+        const response = await callClaudeAPI(message);
+        addMessage(response, false);
+        
+        setLoading(false);
     }
 });
 
